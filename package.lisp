@@ -4,6 +4,7 @@
   (:use #:cl)
   (:import-from #:alexandria
                 #:alist-hash-table
-                #:assoc-value)
+                #:assoc-value
+                #:when-let*)
   (:import-from #:trivial-do
                 #:dohash))

@@ -44,6 +44,8 @@
   \"$schema\": \"http://json-schema.org/draft-07/schema#\",
   \"title\": \"Person\",
   \"type\": \"object\",
+  \"minProperties\": 1,
+  \"maxProperties\": 2,
   \"propertyNames\": {
       \"pattern\": \"^[A-Za-z_][A-Za-z0-9_]*$\"
   },
@@ -51,7 +53,7 @@
 ")
         (data "
 {
-  \"0firstName\": \"John\",
+  \"firstName\": \"John\",
   \"lastName\": \"Doe\",
   \"age\": 38,
 }
