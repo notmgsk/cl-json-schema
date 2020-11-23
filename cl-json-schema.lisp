@@ -87,7 +87,7 @@
   (let ((properties (gethash "properties" schema))
         (required-properties (gethash "required" schema))
         ;; TODO(notmgsk): Implement
-        ;; (property-names (gethash "propertyNames" schema))
+        (property-names (gethash "propertyNames" schema))
         ;; (min-properties (gethash "minProperties" schema))
         ;; (max-properties (gethash "maxProperties" schema))
         ;; (dependencies (gethash "dependencies" schema))
@@ -104,6 +104,8 @@
     (multiple-value-bind (additional-properties-schema present-p)
         (gethash "additionalProperties" schema)
       (dohash (key value object t)
+        (when property-names
+          (validate-string key property-names))
         (unless (or (gethash key properties)
                     (find key *schema-reserved-keywords* :test #'string=))
           (cond ((and present-p additional-properties-schema)
