@@ -103,16 +103,17 @@
           (validate value property-schema))))
     (multiple-value-bind (additional-properties-schema present-p)
         (gethash "additionalProperties" schema)
-      (dohash (key value object t)
-        (when property-names
-          (validate-string key property-names))
-        (unless (or (gethash key properties)
-                    (find key *schema-reserved-keywords* :test #'string=))
-          (cond ((and present-p additional-properties-schema)
-                 (validate value additional-properties-schema))
-                ((and present-p (not additional-properties-schema))
-                 (error "property ~a is not permitted as an additional property in schema ~a"
-                        key schema))))))))
+      (when present-p
+        (dohash (key value object t)
+          (when property-names
+            (validate-string key property-names))
+          (unless (or (and properties (gethash key properties))
+                      (find key *schema-reserved-keywords* :test #'string=))
+            (cond ((and present-p additional-properties-schema)
+                   (validate value additional-properties-schema))
+                  ((and present-p (not additional-properties-schema))
+                   (error "property ~a is not permitted as an additional property in schema ~a"
+                          key schema)))))))))
 
 (defun validate (thing schema)
   (check-type schema (or boolean hash-table))
