@@ -88,8 +88,6 @@
         (required-properties (gethash "required" schema))
         ;; TODO(notmgsk): Implement
         (property-names (gethash "propertyNames" schema))
-        ;; (min-properties (gethash "minProperties" schema))
-        ;; (max-properties (gethash "maxProperties" schema))
         ;; (dependencies (gethash "dependencies" schema))
         )
     (when properties
@@ -101,6 +99,20 @@
             (error "property ~a is required by the schema but not present in the object ~a"
                    property-name schema))
           (validate value property-schema))))
+    ;; TODO(notmgsk): Should minProperties and maxProperties apply if
+    ;; properties is provided?
+    (when-let* ((min-properties (gethash "minProperties" schema))
+                (defined-properties (alexandria:hash-table-keys object))
+                (n-defined-properties (length defined-properties)))
+      (when (> min-properties n-defined-properties)
+        (error "object ~a has fewer properties (~a) than the number required (~a) by the schema ~a"
+               object n-defined-properties min-properties schema)))
+    (when-let* ((max-properties (gethash "maxProperties" schema))
+                (defined-properties (alexandria:hash-table-keys object))
+                (n-defined-properties (length defined-properties)))
+      (when (< max-properties n-defined-properties)
+        (error "object ~a has fewer properties (~a) than the number required (~a) by the schema ~a"
+               object n-defined-properties max-properties schema)))
     (multiple-value-bind (additional-properties-schema present-p)
         (gethash "additionalProperties" schema)
       (when present-p
