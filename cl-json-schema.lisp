@@ -92,14 +92,15 @@
         ;; (max-properties (gethash "maxProperties" schema))
         ;; (dependencies (gethash "dependencies" schema))
         )
-    (dohash (property-name property-schema properties t)
-      (multiple-value-bind (value present-p)
-          (gethash property-name object)
-        (when (and (find property-name required-properties :test #'string=)
-                   (not present-p))
-          (error "property ~a is required by the schema but not present in the object ~a"
-                 property-name schema))
-        (validate value property-schema)))
+    (when properties
+      (dohash (property-name property-schema properties t)
+        (multiple-value-bind (value present-p)
+            (gethash property-name object)
+          (when (and (find property-name required-properties :test #'string=)
+                     (not present-p))
+            (error "property ~a is required by the schema but not present in the object ~a"
+                   property-name schema))
+          (validate value property-schema))))
     (multiple-value-bind (additional-properties-schema present-p)
         (gethash "additionalProperties" schema)
       (dohash (key value object t)

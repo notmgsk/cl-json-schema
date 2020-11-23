@@ -36,3 +36,25 @@
 "))
     (validate (yason:parse data)
               (yason:parse schema))))
+
+(defun test-propertyNames ()
+  (let ((schema "
+{
+  \"$id\": \"https://example.com/person.schema.json\",
+  \"$schema\": \"http://json-schema.org/draft-07/schema#\",
+  \"title\": \"Person\",
+  \"type\": \"object\",
+  \"propertyNames\": {
+      \"pattern\": \"^[A-Za-z_][A-Za-z0-9_]*$\"
+  },
+}
+")
+        (data "
+{
+  \"0firstName\": \"John\",
+  \"lastName\": \"Doe\",
+  \"age\": 38,
+}
+"))
+    (validate (yason:parse data)
+              (yason:parse schema))))
