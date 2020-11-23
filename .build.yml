@@ -1,0 +1,20 @@
+image: ubuntu/lts
+
+packages:
+  - curl
+  - sbcl
+
+tasks:
+  - test: |
+      cd cl-json-schema
+      make test
+      make coverage
+
+#artifacts:
+#  - /tmp/report/cover-index.html
+
+sources:
+  - git@git.sr.ht:~notmgsk/cl-json-schema
+
+secrets:
+  - 069ff76d-52bc-4ded-93b2-047942376317
