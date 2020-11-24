@@ -32,6 +32,7 @@
   \"firstName\": \"John\",
   \"lastName\": \"Doe\",
   \"age\": 38,
+  \"boop\": 1,
 }
 "))
     (validate (yason:parse data)
@@ -56,6 +57,25 @@
   \"firstName\": \"John\",
   \"lastName\": \"Doe\",
   \"age\": 38,
+}
+"))
+    (validate (yason:parse data)
+              (yason:parse schema))))
+
+(defun test-pattern-properties ()
+  (let ((schema "
+{
+  \"type\": \"object\",
+  \"patternProperties\": {
+    \"^S_\": { \"type\": \"string\" },
+    \"^I_\": { \"type\": \"integer\" }
+  },
+  \"additionalProperties\": false
+}")
+        (data "
+{
+  \"S_25\": \"This is a string\",
+  \"I_0\": \"hi\",
 }
 "))
     (validate (yason:parse data)
