@@ -7,4 +7,9 @@
                 #:assoc-value
                 #:when-let*)
   (:import-from #:trivial-do
-                #:dohash))
+                #:dohash)
+  (:export #:json-schema-error
+           #:json-schema-additional-property-error
+           #:json-schema-error-schema
+           #:json-schema-error-property-name
+           #:validate))

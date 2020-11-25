@@ -150,8 +150,9 @@
                  (let ((matching-key-schema (matching-key key pattern-properties-schema)))
                    (validate value matching-key-schema)))
                 (t
-                 (error "property ~a is not permitted as an additional property in schema ~a"
-                        key schema))))))))))
+                 (error 'json-schema-additional-property-error
+                        :schema schema
+                        :property-name key))))))))))
 
 (defun validate (thing schema)
   (check-type schema (or boolean hash-table))

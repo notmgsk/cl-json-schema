@@ -24,7 +24,7 @@
     }
   },
   \"required\": [\"firstName\"],
-  \"additionalProperties\": {\"type\": \"string\"},
+  \"additionalProperties\": false,
 }
 ")
         (data "
