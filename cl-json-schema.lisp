@@ -98,7 +98,8 @@
                      (not present-p))
             (error "property ~a is required by the schema but not present in the object ~a"
                    property-name schema))
-          (validate value property-schema))))
+          (when present-p
+            (validate value property-schema)))))
     ;; TODO(notmgsk): Should minProperties and maxProperties apply if
     ;; properties is provided?
     (when-let* ((min-properties (gethash "minProperties" schema))
