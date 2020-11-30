@@ -4,9 +4,9 @@
   (cond
     ((null headless)
      (run-package-tests :package ':cl-json-schema-tests
-                         :verbose verbose
-                         :describe-failures t
-                         :interactive t))
+                        :verbose verbose
+                        :describe-failures t
+                        :interactive t))
     (t
      (let ((successp (run-package-tests :package ':cl-json-schema-tests
                                         :verbose t

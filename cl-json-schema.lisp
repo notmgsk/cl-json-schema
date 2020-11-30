@@ -54,12 +54,14 @@
 
 (defun validate-integer (integer schema)
   (unless (integerp integer)
-    (error "~a has type ~a, not integer" integer (type-of integer)))
+    (error 'json-schema-invalid-type-error
+           :datum integer :schema schema :invalid-type (lisp->json integer) :expected-type "integer"))
   (%validate-number-properties integer schema))
 
 (defun validate-number (number schema)
   (unless (numberp number)
-    (error "~a has type ~a, not number" number (type-of number)))
+    (error 'json-schema-invalid-type-error
+           :datum number :schema schema :invalid-type (lisp->json number) :expected-type "number"))
   (%validate-number-properties number schema))
 
 (defun validate-string (string schema)
@@ -84,6 +86,7 @@
       (error "string ~s does not match the required pattern ~s" string pattern))))
 
 (defun validate-object (object schema)
+  (check-type object hash-table)
   (let ((properties (gethash "properties" schema))
         (required-properties (gethash "required" schema))
         ;; TODO(notmgsk): Implement
@@ -164,6 +167,10 @@
         ((typep schema 'hash-table)
          (let ((type (gethash "type" schema)))
            (cond ((string= type "object")
+                  (unless (typep thing 'hash-table)
+                    (error 'json-schema-invalid-type-error
+                           :datum thing :schema schema
+                           :invalid-type (lisp->json thing) :expected-type "object"))
                   (validate-object thing schema))
                  ((string= type "string")
                   (validate-string thing schema))
@@ -175,3 +182,16 @@
                   (error "definitely u wot ~a" type)))))
         (t
          (error "u wot"))))
+
+(defun lisp->json (thing)
+  (typecase thing
+    (string "string")
+    (number "number")
+    (hash-table
+     (unless (eql (hash-table-test thing) 'equal)
+       (error "The test function for HASH-TABLEs is required to be EQUAL but got ~a"
+              (hash-table-test thing)))
+     "hash-table")
+    ((or array sequence) "array")
+    (boolean "boolean")
+    (t (error "oops"))))

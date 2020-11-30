@@ -12,4 +12,8 @@
            #:json-schema-additional-property-error
            #:json-schema-error-schema
            #:json-schema-error-property-name
+           #:json-schema-error-invalid-type
+           #:json-schema-invalid-type-error
+           #:json-schema-error-datum
+           #:json-schema-error-expected-type
            #:validate))

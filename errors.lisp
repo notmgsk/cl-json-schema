@@ -1,11 +1,22 @@
 (in-package #:cl-json-schema)
 
 (define-condition json-schema-error ()
-  ())
+  ((schema :initarg :schema :reader json-schema-error-schema)
+   (datum :initarg :datum :reader json-schema-error-datum)))
+
+(define-condition json-schema-invalid-type-error (json-schema-error)
+  ((expected-type :initarg :expected-type :reader json-schema-error-expected-type)
+   (invalid-type :initarg :invalid-type :reader json-schema-error-invalid-type))
+  (:report
+   (lambda (condition stream)
+     (format stream "type ~s (for datum ~a) does not satisfy type ~s specified by schema ~a"
+             (json-schema-error-invalid-type condition)
+             (json-schema-error-datum condition)
+             (json-schema-error-expected-type condition)
+             (json-schema-error-schema condition)))))
 
 (define-condition json-schema-additional-property-error (json-schema-error)
-  ((schema        :initarg :schema        :reader json-schema-error-schema)
-   (property-name :initarg :property-name :reader json-schema-error-property-name))
+  ((property-name :initarg :property-name :reader json-schema-error-property-name))
   (:report
    (lambda (condition stream)
      (format stream "property ~a is invalid for schema ~a"
