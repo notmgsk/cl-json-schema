@@ -15,7 +15,21 @@
              (json-schema-error-expected-type condition)
              (json-schema-error-schema condition)))))
 
+(define-condition json-schema-required-property-error (json-schema-error)
+  ((property-name :initarg :property-name :reader json-schema-error-property-name)))
+
+(define-condition json-schema-required-property-missing-error (json-schema-required-property-error)
+  ()
+  (:report
+   (lambda (condition stream)
+     (format stream "required property ~a is missing in the datum ~a but required by the schema ~a"
+             (json-schema-error-property-name condition)
+             (json-schema-error-datum condition)
+             (json-schema-error-schema condition)))))
+
 (define-condition json-schema-additional-property-error (json-schema-error)
+  ;; TODO(notmgsk): Should property errors have a common ancestor with
+  ;; this slot?
   ((property-name :initarg :property-name :reader json-schema-error-property-name))
   (:report
    (lambda (condition stream)

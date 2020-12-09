@@ -83,6 +83,48 @@
       (is (string= (json-schema-error-invalid-type condition) "string"))
       (is (string= (json-schema-error-expected-type condition) "number")))))
 
+(deftest test-required-properties ()
+  (let ((schema (yason:parse "
+{
+  \"type\": \"object\",
+  \"properties\": {
+    \"name\":      { \"type\": \"string\" },
+    \"email\":     { \"type\": \"string\" },
+    \"address\":   { \"type\": \"string\" },
+    \"telephone\": { \"type\": \"string\" }
+  },
+  \"required\": [\"name\", \"email\"]
+}")))
+    (let ((datum
+            (yason:parse "
+{
+  \"name\": \"William Shakespeare\",
+  \"email\": \"bill@stratford-upon-avon.co.uk\"
+}")))
+      (not-signals json-schema-error
+        (validate datum schema)))
+    (let ((datum
+            (yason:parse "
+{
+  \"name\": \"William Shakespeare\",
+  \"email\": \"bill@stratford-upon-avon.co.uk\",
+  \"address\": \"Henley Street, Stratford-upon-Avon, Warwickshire, England\",
+  \"authorship\": \"in question\"
+}
+")))
+      (not-signals json-schema-error
+        (validate datum schema)))
+    (let* ((datum
+             (yason:parse "
+{
+  \"name\": \"William Shakespeare\",
+  \"address\": \"Henley Street, Stratford-upon-Avon, Warwickshire, England\",
+}"))
+           (condition
+             (signals json-schema-error
+               (validate datum schema))))
+      (is (string= (json-schema-error-property-name condition) "email")))))
+
 (deftest test-additional-properties ()
   (let ((schema "
 {

@@ -99,8 +99,8 @@
             (gethash property-name object)
           (when (and (find property-name required-properties :test #'string=)
                      (not present-p))
-            (error "property ~a is required by the schema but not present in the object ~a"
-                   property-name schema))
+            (error 'json-schema-required-property-missing-error
+                   :schema schema :datum object :property-name property-name))
           (when present-p
             (validate value property-schema)))))
     ;; TODO(notmgsk): Should minProperties and maxProperties apply if
