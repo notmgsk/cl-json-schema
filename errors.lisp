@@ -36,3 +36,27 @@
      (format stream "property ~a is invalid for schema ~a"
              (json-schema-error-property-name condition)
              (json-schema-error-schema condition)))))
+
+(define-condition json-schema-properties-size-error (json-schema-error)
+  ((minimum-properties :initarg :minimum-properties :reader json-schema-error-minimum-properties)
+   (maximum-properties :initarg :maximum-properties :reader json-schema-error-maximum-properties)
+   (provided-properties :initarg :provided-properties :reader json-schema-error-provided-properties))
+  (:report
+   (lambda (condition stream)
+     (with-slots (json-schema-error-minimum-properties
+                  json-schema-error-maximum-properties
+                  json-schema-error-provided-properties)
+         condition
+       (cond ((and json-schema-error-minimum-properties json-schema-error-maximum-properties)
+              (format stream "expected at least ~a and at most ~a properties but got ~a"
+                      json-schema-error-minimum-properties
+                      json-schema-error-maximum-properties
+                      json-schema-error-provided-properties))
+             (json-schema-error-minimum-properties
+              (format stream "expected at least ~a properties but got ~a"
+                      json-schema-error-minimum-properties
+                      json-schema-error-maximum-properties))
+             (json-schema-error-maximum-properties
+              (format stream "expected at most ~a properties but got ~a"
+                      json-schema-error-maximum-properties
+                      json-schema-error-maximum-properties)))))))

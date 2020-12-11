@@ -153,3 +153,40 @@
                        (validate (yason:parse data)
                                  (yason:parse schema)))))
       (is (string= (json-schema-error-property-name condition) "lastName")))))
+
+
+(deftest test-min-properties ()
+  (let ((schema "{
+  \"type\": \"object\",
+  \"minProperties\": 2,
+}"))
+    (let* ((data "{ \"a\": 0, \"b\": 1 }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{ \"a\": 0, \"b\": 1, \"c\": 2 }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{}")
+           (condition (signals json-schema-properties-size-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (= (json-schema-error-provided-properties condition) 0))
+      (is (= (json-schema-error-minimum-properties condition) 2)))))
+
+(deftest test-max-properties ()
+  (let ((schema "{
+  \"type\": \"object\",
+  \"maxProperties\": 3,
+}"))
+    (let* ((data "{ \"a\": 0, \"b\": 1, \"c\": 2 }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{ \"a\": 0, \"b\": 1, \"c\": 2, \"d\": 3 }")
+           (condition (signals json-schema-properties-size-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (= (json-schema-error-provided-properties condition) 4))
+      (is (= (json-schema-error-maximum-properties condition) 3)))))

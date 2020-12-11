@@ -8,6 +8,10 @@ tasks:
   - test: |
       cd cl-json-schema
       make test
+      make coverage
+
+artifacts:
+  - /tmp/report/cover-index.html
 
 sources:
   - git@git.sr.ht:~notmgsk/cl-json-schema

@@ -21,3 +21,7 @@ system-index.txt: $(QUICKLISP_SETUP)
 .PHONY: test
 test: $(QUICKLISP_SETUP)
 	$(QUICKLISP) --eval "(ql:quickload :cl-json-schema-tests)" --eval "(asdf:test-system :cl-json-schema)"
+
+.PHONY: coverage
+coverage: $(QUICKLISP_SETUP)
+	$(QUICKLISP) --eval '(load "coverage.lisp")'

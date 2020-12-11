@@ -16,4 +16,8 @@
            #:json-schema-invalid-type-error
            #:json-schema-error-datum
            #:json-schema-error-expected-type
+           #:json-schema-properties-size-error
+           #:json-schema-error-minimum-properties
+           #:json-schema-error-maximum-properties
+           #:json-schema-error-provided-properties
            #:validate))

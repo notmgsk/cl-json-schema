@@ -9,18 +9,6 @@
   '("type" "title" "description" "default" "examples"
     "$id" "$schema"))
 
-(defun valid-json-type-p (thing)
-  (typep thing 'json-type))
-
-(defun validate-type (thing json-type)
-  (cond
-    ((string= json-type "string")
-     (typep thing 'string))
-    ((string= json-type "object")
-     (typep thing 'hash-table))
-    (t
-     (error "invalid json type ~a" json-type))))
-
 (defun %validate-number-properties (number schema)
   (let ((multiples (gethash "multiples" schema))
         (minimum (gethash "minimum" schema))
@@ -105,18 +93,20 @@
             (validate value property-schema)))))
     ;; TODO(notmgsk): Should minProperties and maxProperties apply if
     ;; properties is provided?
-    (when-let* ((min-properties (gethash "minProperties" schema))
-                (defined-properties (alexandria:hash-table-keys object))
-                (n-defined-properties (length defined-properties)))
-      (when (> min-properties n-defined-properties)
-        (error "object ~a has fewer properties (~a) than the number required (~a) by the schema ~a"
-               object n-defined-properties min-properties schema)))
+    (when-let* ((min-properties (gethash "minProperties" schema)))
+      (let* ((defined-properties (alexandria:hash-table-keys object))
+             (n-defined-properties (length defined-properties)))
+        (when (> min-properties n-defined-properties)
+          (error 'json-schema-properties-size-error
+                 :minimum-properties min-properties
+                 :provided-properties n-defined-properties))))
     (when-let* ((max-properties (gethash "maxProperties" schema))
                 (defined-properties (alexandria:hash-table-keys object))
                 (n-defined-properties (length defined-properties)))
       (when (< max-properties n-defined-properties)
-        (error "object ~a has fewer properties (~a) than the number required (~a) by the schema ~a"
-               object n-defined-properties max-properties schema)))
+        (error 'json-schema-properties-size-error
+               :maximum-properties max-properties
+               :provided-properties n-defined-properties)))
     (labels ((matching-key (value regex-keyed-table)
                (dohash (regex schema regex-keyed-table nil)
                  ;; TODO(notmgsk): import SCAN
