@@ -52,6 +52,11 @@
            :datum number :schema schema :invalid-type (lisp->json number) :expected-type "number"))
   (%validate-number-properties number schema))
 
+(defun validate-boolean (boolean schema)
+  (unless (typep boolean 'boolean)
+    (error 'json-schema-invalid-type-error
+           :datum boolean :schema schema :invalid-type (lisp->json boolean) :expected-type "boolean")))
+
 (defun validate-string (string schema)
   (unless (typep string 'string)
     (error "value ~a is not a string" string))
@@ -168,6 +173,8 @@
                   (validate-integer thing schema))
                  ((string= type "number")
                   (validate-number thing schema))
+                 ((string= type "boolean")
+                  (validate-boolean thing schema))
                  (t
                   (error "definitely u wot ~a" type)))))
         (t
