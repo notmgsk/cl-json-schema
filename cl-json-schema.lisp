@@ -155,7 +155,7 @@
         ((and (typep schema 'boolean) (not schema))
          nil)
         ((typep schema 'hash-table)
-         (let ((type (gethash "type" schema)))
+         (when-let* ((type (gethash "type" schema)))
            (cond ((string= type "object")
                   (unless (typep thing 'hash-table)
                     (error 'json-schema-invalid-type-error
