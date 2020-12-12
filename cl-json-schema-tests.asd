@@ -13,4 +13,6 @@
   :components ((:file "package")
                (:file "suite")
                (:file "tests")
+               (:file "test-misc")
+               (:file "test-boolean")
                (:file "test-objects")))

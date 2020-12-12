@@ -59,7 +59,9 @@
 
 (defun validate-string (string schema)
   (unless (typep string 'string)
-    (error "value ~a is not a string" string))
+    (error 'json-schema-invalid-type-error
+           :schema schema :datum string
+           :expected-type "string" :invalid-type (lisp->json string)))
   (let ((min-length (gethash "minLength" schema))
         (max-length (gethash "maxLength" schema))
         (pattern (gethash "pattern" schema))
@@ -77,6 +79,12 @@
            ;; TODO(notmgsk): Catch ppcre errors?
            (not (cl-ppcre:scan pattern string)))
       (error "string ~s does not match the required pattern ~s" string pattern))))
+
+(defun matching-key (value regex-keyed-table)
+  (dohash (regex schema regex-keyed-table nil)
+    ;; TODO(notmgsk): import SCAN
+    (when (cl-ppcre:scan regex value)
+      (return-from matching-key schema))))
 
 (defun validate-object (object schema)
   (check-type object hash-table)
@@ -112,53 +120,49 @@
         (error 'json-schema-properties-size-error
                :maximum-properties max-properties
                :provided-properties n-defined-properties)))
-    (labels ((matching-key (value regex-keyed-table)
-               (dohash (regex schema regex-keyed-table nil)
-                 ;; TODO(notmgsk): import SCAN
-                 (when (cl-ppcre:scan regex value)
-                   (return-from matching-key schema)))))
-      (multiple-value-bind (additional-properties-schema additional-properties-p)
-          (gethash "additionalProperties" schema)
-        (multiple-value-bind (pattern-properties-schema pattern-properties-p)
-            (gethash "patternProperties" schema)
-          (dohash (key value object t)
-            ;; All property names must be strings (i.e. JSON keys are strings).
-            (when property-names
-              (validate-string key property-names))
-            ;; Don't need to validate if this key exists in the properties schema, or if
-            ;; it's a reserved keyword.
-            (unless (or (and properties (gethash key properties))
-                        (find key *schema-reserved-keywords* :test #'string=))
-              (cond
-                ;; 1. No additional properties entry, or additional properies = true -> all
-                ;; additional properties are valid.
-                ((or (not additional-properties-p)
-                     (and (typep additional-properties-schema 'boolean)
-                          additional-properties-schema))
-                 t)
-                ;; 2. Additional properties entry, no pattern properties entry -> match all
-                ;; additional properties against an entry in additional properties
-                ((and (not pattern-properties-p)
-                      additional-properties-schema)
-                 (validate value additional-properties-schema))
-                ;; 3. Additional properties entry, pattern properties entry -> match all
-                ;; additional properties against an entry in additional properties OR match
-                ;; them against a property pattern
-                ((and pattern-properties-p
-                      (matching-key key pattern-properties-schema))
-                 (let ((matching-key-schema (matching-key key pattern-properties-schema)))
-                   (validate value matching-key-schema)))
-                (t
-                 (error 'json-schema-additional-property-error
-                        :schema schema
-                        :property-name key))))))))))
+    (multiple-value-bind (additional-properties-schema additional-properties-p)
+        (gethash "additionalProperties" schema)
+      (multiple-value-bind (pattern-properties-schema pattern-properties-p)
+          (gethash "patternProperties" schema)
+        (dohash (key value object t)
+          ;; All property names must be strings (i.e. JSON keys are strings).
+          (when property-names
+            (validate-string key property-names))
+          ;; Don't need to validate if this key exists in the properties schema, or if
+          ;; it's a reserved keyword.
+          (unless (or (and properties (gethash key properties))
+                      (find key *schema-reserved-keywords* :test #'string=))
+            (cond
+              ;; 1. No additional properties entry, or additional properies = true -> all
+              ;; additional properties are valid.
+              ((or (not additional-properties-p)
+                   (and (typep additional-properties-schema 'boolean)
+                        additional-properties-schema))
+               t)
+              ;; 2. Additional properties entry, no pattern properties entry -> match all
+              ;; additional properties against an entry in additional properties
+              ((and (not pattern-properties-p)
+                    additional-properties-schema)
+               (validate value additional-properties-schema))
+              ;; 3. Additional properties entry, pattern properties entry -> match all
+              ;; additional properties against an entry in additional properties OR match
+              ;; them against a property pattern
+              ((and pattern-properties-p (matching-key key pattern-properties-schema))
+               (let ((matching-key-schema (matching-key key pattern-properties-schema)))
+                 (validate value matching-key-schema)))
+              ((and additional-properties-p additional-properties-schema)
+               (validate value additional-properties-schema))
+              (t
+               (error 'json-schema-additional-property-error
+                      :schema schema
+                      :property-name key)))))))))
 
 (defun validate (thing schema)
   (check-type schema (or boolean hash-table))
   (cond ((and (typep schema 'boolean) schema)
          t)
         ((and (typep schema 'boolean) (not schema))
-         nil)
+         (error 'json-schema-error :datum thing :schema schema))
         ((typep schema 'hash-table)
          (when-let* ((type (gethash "type" schema)))
            (cond ((string= type "object")

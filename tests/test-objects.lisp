@@ -190,3 +190,66 @@
                                   (yason:parse schema)))))
       (is (= (json-schema-error-provided-properties condition) 4))
       (is (= (json-schema-error-maximum-properties condition) 3)))))
+
+(deftest test-pattern-properties ()
+  (let ((schema "{
+  \"type\": \"object\",
+  \"patternProperties\": {
+    \"^S_\": { \"type\": \"string\" },
+    \"^I_\": { \"type\": \"integer\" }
+  },
+  \"additionalProperties\": false
+}"))
+    (let ((data "{ \"S_25\": \"This is a string\" }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let ((data "{ \"I_0\": 42 }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{ \"S_0\": 42 }")
+           (condition (signals json-schema-invalid-type-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (string= (json-schema-error-expected-type condition) "string"))
+      (is (string= (json-schema-error-invalid-type condition) "number"))
+      (is (= (json-schema-error-datum condition) 42)))
+    (let* ((data "{ \"I_42\": \"This is a string\" }")
+           (condition (signals json-schema-invalid-type-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (string= (json-schema-error-expected-type condition) "integer"))
+      (is (string= (json-schema-error-invalid-type condition) "string"))
+      (is (string= (json-schema-error-datum condition) "This is a string")))
+    (let* ((data "{ \"keyword\": \"value\" }")
+           (condition (signals json-schema-additional-property-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (string= (json-schema-error-property-name condition) "keyword"))))
+  (let ((schema "{
+  \"type\": \"object\",
+  \"properties\": {
+    \"builtin\": { \"type\": \"number\" }
+  },
+  \"patternProperties\": {
+    \"^S_\": { \"type\": \"string\" },
+    \"^I_\": { \"type\": \"integer\" }
+  },
+  \"additionalProperties\": { \"type\": \"string\" }
+}"))
+    (let* ((data "{ \"builtin\": 42 }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{ \"keyword\": \"value\" }"))
+      (not-signals json-schema-error
+        (validate (yason:parse data)
+                  (yason:parse schema))))
+    (let* ((data "{ \"keyword\": 42 }")
+           (condition (signals json-schema-invalid-type-error
+                        (validate (yason:parse data)
+                                  (yason:parse schema)))))
+      (is (string= (json-schema-error-expected-type condition) "string"))
+      (is (string= (json-schema-error-invalid-type condition) "number"))
+      (is (= (json-schema-error-datum condition) 42)))))
