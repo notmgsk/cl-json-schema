@@ -35,4 +35,9 @@
            #:json-schema-error-exclusive-maximum
            #:json-schema-invalid-schema-type-error
            #:json-schema-error-schema-type
-           #:validate))
+           #:validate
+           #:validate-integer
+           #:validate-number
+           #:validate-boolean
+           #:validate-string
+           #:validate-object))
