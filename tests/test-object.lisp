@@ -312,7 +312,7 @@
 
 (deftest test-invalid-object ()
   (signals json-schema-invalid-type-error
-    (cl-json-schema::validate-object nil (yason:parse "{\"type\": \"string\"}")))
+    (json-schema::validate-object nil (yason:parse "{\"type\": \"string\"}")))
   (signals error
-    (cl-json-schema::validate-object (make-hash-table :test 'eql)
-                                     (yason:parse "{\"type\": \"string\"}"))))
+    (json-schema::validate-object (make-hash-table :test 'eql)
+                                  (yason:parse "{\"type\": \"string\"}"))))

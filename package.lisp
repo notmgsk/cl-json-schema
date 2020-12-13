@@ -2,6 +2,7 @@
 
 (defpackage #:cl-json-schema
   (:use #:cl)
+  (:nicknames #:json-schema)
   (:import-from #:alexandria
                 #:alist-hash-table
                 #:assoc-value
