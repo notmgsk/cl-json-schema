@@ -35,3 +35,11 @@
     (signals json-schema-error
       (validate (yason:parse "{ \"an\": [ \"arbitrarily\", \"nested\" ], \"data\": \"structure\" }")
                 (yason:parse schema)))))
+
+(deftest test-invalid-schema-type ()
+  (let ((schema (yason:parse "{\"type\": \"z0mgbad!\"}")))
+    (signals json-schema-invalid-schema-type-error
+      (validate nil schema))))
+
+(deftest test-invalid-lisp->json ()
+  (signals error (cl-json-schema::lisp->json 'symbol)))

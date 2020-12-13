@@ -22,4 +22,16 @@
            #:json-schema-error-provided-properties
            #:json-schema-pattern-error
            #:json-schema-error-pattern
+           #:json-schema-length-error
+           #:json-schema-error-min-length
+           #:json-schema-error-max-length
+           #:json-schema-multipleof-error
+           #:json-schema-error-multiple
+           #:json-schema-range-error
+           #:json-schema-error-minimum
+           #:json-schema-error-exclusive-minimum
+           #:json-schema-error-maximum
+           #:json-schema-error-exclusive-maximum
+           #:json-schema-invalid-schema-type-error
+           #:json-schema-error-schema-type
            #:validate))

@@ -309,3 +309,10 @@
         (is (= (json-schema-error-datum condition) 0))
         (is (string= (json-schema-error-expected-type condition) "string"))
         (is (string= (json-schema-error-invalid-type condition) "number"))))))
+
+(deftest test-invalid-object ()
+  (signals json-schema-invalid-type-error
+    (cl-json-schema::validate-object nil (yason:parse "{\"type\": \"string\"}")))
+  (signals error
+    (cl-json-schema::validate-object (make-hash-table :test 'eql)
+                                     (yason:parse "{\"type\": \"string\"}"))))

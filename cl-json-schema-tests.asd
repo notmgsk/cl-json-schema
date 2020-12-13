@@ -15,4 +15,6 @@
                (:file "tests")
                (:file "test-misc")
                (:file "test-boolean")
-               (:file "test-objects")))
+               (:file "test-string")
+               (:file "test-numeric")
+               (:file "test-object")))

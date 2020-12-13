@@ -69,3 +69,66 @@
          condition
        (format stream "Datum ~s does not match the required pattern ~s"
                json-schema-error-datum json-schema-error-pattern)))))
+
+(define-condition json-schema-length-error (json-schema-error)
+  ((min-length :initarg :min-length :reader json-schema-error-min-length)
+   (max-length :initarg :max-length :reader json-schema-error-max-length))
+  (:report
+   (lambda (condition stream)
+     (with-slots (json-schema-error-datum
+                  json-schema-error-min-length
+                  json-schema-error-max-length)
+         condition
+       (if (and json-schema-error-min-length
+                (> json-schema-error-min-length (length json-schema-error-datum)))
+           (format stream "string ~a has length ~a less than the required minimum length ~a"
+                   json-schema-error-datum
+                   (length json-schema-error-datum)
+                   json-schema-error-min-length)
+           (format stream "string ~a has length ~a greather than the required maximum length ~a"
+                   json-schema-error-datum
+                   (length json-schema-error-datum)
+                   json-schema-error-max-length))))))
+
+(define-condition json-schema-multipleof-error (json-schema-error)
+  ((multiple :initarg :multiple :reader json-schema-error-multiple))
+  (:report
+   (lambda (condition stream)
+     (with-slots (json-schema-error-datum json-schema-error-multiple)
+         condition
+       (format stream "Datum ~a is not a multiple of ~a"
+               json-schema-error-datum
+               json-schema-error-multiple)))))
+
+(define-condition json-schema-range-error (json-schema-error)
+  ((minimum :initarg :minimum :reader json-schema-error-minimum)
+   (exclusive-minimum :initarg :exclusive-minimum :reader json-schema-error-exclusive-minimum)
+   (maximum :initarg :maximum :reader json-schema-error-maximum)
+   (exclusive-maximum :initarg :exclusive-maximum :reader json-schema-error-exclusive-maximum))
+  (:report
+   (lambda (condition stream)
+     (with-slots (json-schema-error-datum
+                  json-schema-error-minimum
+                  json-schema-error-exclusive-minimum
+                  json-schema-error-maximum
+                  json-schema-error-exclusive-maximum)
+         condition
+       (cond (json-schema-error-minimum
+              (format stream "Datum ~a is less than the inclusive minimum ~a"
+                      json-schema-error-datum json-schema-error-minimum))
+             (json-schema-error-exclusive-minimum
+              (format stream "Datum ~a is less than or equal to the exclusive minimum ~a"
+                      json-schema-error-datum json-schema-error-exclusive-minimum))
+             (json-schema-error-maximum
+              (format stream "Datum ~a is greater than the inclusive maximum ~a"
+                      json-schema-error-datum json-schema-error-maximum))
+             (json-schema-error-exclusive-maximum
+              (format stream "Datum ~a is greater than or equal to the exclusive minimum ~a"
+                      json-schema-error-datum json-schema-error-exclusive-maximum)))))))
+
+(define-condition json-schema-invalid-schema-type-error (json-schema-error)
+  ((schema-type :initarg :schema-type :reader json-schema-error-schema-type))
+  (:report
+   (lambda (condition stream)
+     (format stream "Unsupported type ~s in schema"
+             (json-schema-error-schema-type condition)))))

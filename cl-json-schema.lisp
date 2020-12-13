@@ -10,35 +10,31 @@
     "$id" "$schema"))
 
 (defun %validate-number-properties (number schema)
-  (let ((multiples (gethash "multiples" schema))
+  (let ((multiples (gethash "multipleOf" schema))
         (minimum (gethash "minimum" schema))
         (exclusive-minimum (gethash "exclusiveMinimum" schema))
         (maximum (gethash "maximum" schema))
         (exclusive-maximum (gethash "exclusiveMaximum" schema)))
     (when (and multiples
                (not (zerop (mod number multiples))))
-      (error "number ~a is not a multiple of ~a" number multiples))
+      (error 'json-schema-multipleof-error :datum number :multiple multiples))
     (when (and
            exclusive-minimum
            (not minimum)
            (<= number exclusive-minimum))
-      (error "number ~a does not satisfy exclusive minimum requirement ~a"
-             number exclusive-minimum))
+      (error 'json-schema-range-error :datum number :exclusive-minimum exclusive-minimum))
     (when (and minimum
                (< number minimum))
-      (error "number ~a does not satisfy minimum requirement ~a"
-             number minimum))
+      (error 'json-schema-range-error :datum number :minimum minimum))
     (when (and
            exclusive-maximum
            (not maximum)
            (>= number exclusive-maximum))
-      (error "number ~a does not satisfy exclusive maximum requirement ~a"
-             number exclusive-maximum))
+      (error 'json-schema-range-error :datum number :exclusive-maximum exclusive-maximum))
     (when (and
            maximum
            (> number maximum))
-      (error "number ~a does not satisfy maximum requirement ~a"
-             number maximum))))
+      (error 'json-schema-range-error :datum number :maximum maximum))))
 
 (defun validate-integer (integer schema)
   (unless (integerp integer)
@@ -69,11 +65,11 @@
         ;; (format (gethash "format" schema))
         )
     (when (and min-length (< (length string) min-length))
-      (error "string ~s (length ~a) does not satisfy minimum length requirement ~a"
-             string (length string) min-length))
+      (error 'json-schema-length-error
+             :schema schema :datum string :min-length min-length))
     (when (and max-length (> (length string) max-length))
-      (error "string ~s (length ~a) does not satisfy maximum length requirement ~a"
-             string (length string) max-length))
+      (error 'json-schema-length-error
+             :schema schema :datum string :max-length max-length))
     (when (and
            pattern
            ;; TODO(notmgsk): Catch ppcre errors?
@@ -87,7 +83,11 @@
       (return-from matching-key schema))))
 
 (defun validate-object (object schema)
-  (check-type object hash-table)
+  (unless (typep object 'hash-table)
+    (error 'json-schema-invalid-type-error
+           :datum object :schema schema :invalid-type (lisp->json object) :expected-type "hash-table"))
+  (unless (eql (hash-table-test object) 'equal)
+    (error "HASH-TABLEs must use EQUAL for their test"))
   (let ((properties (gethash "properties" schema))
         (required-properties (gethash "required" schema))
         ;; TODO(notmgsk): Implement
@@ -163,7 +163,7 @@
          t)
         ((and (typep schema 'boolean) (not schema))
          (error 'json-schema-error :datum thing :schema schema))
-        ((typep schema 'hash-table)
+        (t
          (when-let* ((type (gethash "type" schema)))
            (cond ((string= type "object")
                   (unless (typep thing 'hash-table)
@@ -180,19 +180,15 @@
                  ((string= type "boolean")
                   (validate-boolean thing schema))
                  (t
-                  (error "definitely u wot ~a" type)))))
-        (t
-         (error "u wot"))))
+                  (error 'json-schema-invalid-schema-type-error
+                         :schema schema :schema-type type)))))))
 
 (defun lisp->json (thing)
   (typecase thing
     (string "string")
     (number "number")
-    (hash-table
-     (unless (eql (hash-table-test thing) 'equal)
-       (error "The test function for HASH-TABLEs is required to be EQUAL but got ~a"
-              (hash-table-test thing)))
-     "hash-table")
+    (hash-table "hash-table")
     ((or array sequence) "array")
     (boolean "boolean")
-    (t (error "oops"))))
+    (t (error "Cannot convert ~a (of type ~a) to a JSON type"
+              thing (type-of thing)))))
