@@ -78,7 +78,7 @@
            pattern
            ;; TODO(notmgsk): Catch ppcre errors?
            (not (cl-ppcre:scan pattern string)))
-      (error "string ~s does not match the required pattern ~s" string pattern))))
+      (error 'json-schema-pattern-error :datum string :pattern pattern :schema schema))))
 
 (defun matching-key (value regex-keyed-table)
   (dohash (regex schema regex-keyed-table nil)

@@ -60,3 +60,12 @@
               (format stream "expected at most ~a properties but got ~a"
                       json-schema-error-maximum-properties
                       json-schema-error-maximum-properties)))))))
+
+(define-condition json-schema-pattern-error (json-schema-error)
+  ((pattern :initarg :pattern :reader json-schema-error-pattern))
+  (:report
+   (lambda (condition stream)
+     (with-slots (json-schema-error-datum json-schema-error-pattern)
+         condition
+       (format stream "Datum ~s does not match the required pattern ~s"
+               json-schema-error-datum json-schema-error-pattern)))))

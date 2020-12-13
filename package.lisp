@@ -20,4 +20,6 @@
            #:json-schema-error-minimum-properties
            #:json-schema-error-maximum-properties
            #:json-schema-error-provided-properties
+           #:json-schema-pattern-error
+           #:json-schema-error-pattern
            #:validate))

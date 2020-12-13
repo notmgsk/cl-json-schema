@@ -152,7 +152,31 @@
     (let ((condition (signals json-schema-additional-property-error
                        (validate (yason:parse data)
                                  (yason:parse schema)))))
-      (is (string= (json-schema-error-property-name condition) "lastName")))))
+      (is (string= (json-schema-error-property-name condition) "lastName"))))
+  (let ((schema (yason:parse "{
+  \"type\": \"object\",
+  \"properties\": {
+    \"number\":      { \"type\": \"number\" },
+    \"street_name\": { \"type\": \"string\" },
+    \"street_type\": { \"type\": \"string\",
+                     \"enum\": [\"Street\", \"Avenue\", \"Boulevard\"]
+                   }
+  },
+  \"additionalProperties\": { \"type\": \"string\" }
+}")))
+    (let ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\" }")))
+      (not-signals json-schema-error
+        (validate data schema)))
+    (let ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\", \"direction\": \"NW\" }")))
+      (not-signals json-schema-error
+        (validate data schema)))
+    (let* ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\", \"office_number\": 201 }"))
+           (condition (signals json-schema-invalid-type-error
+                        (validate data schema))))
+      (is (= (json-schema-error-datum condition) 201))
+      (is (string= (json-schema-error-expected-type condition) "string"))
+      (is (string= (json-schema-error-invalid-type condition) "number")))))
+
 
 
 (deftest test-min-properties ()
@@ -253,3 +277,35 @@
       (is (string= (json-schema-error-expected-type condition) "string"))
       (is (string= (json-schema-error-invalid-type condition) "number"))
       (is (= (json-schema-error-datum condition) 42)))))
+
+(deftest test-property-names ()
+  (let ((schema (yason:parse "{
+  \"type\": \"object\",
+  \"propertyNames\": {
+    \"pattern\": \"^[A-Za-z_][A-Za-z0-9_]*$\"
+  }
+}
+")))
+    (let ((datum (yason:parse "{
+  \"_a_proper_token_001\": \"value\"
+}")))
+      (not-signals json-schema-error
+        (validate datum schema)))
+    (let* ((datum (yason:parse "{
+  \"001 invalid\": \"value\"
+}"))
+           (condition (signals json-schema-pattern-error
+                        (validate datum schema))))
+      (is (string= (json-schema-error-datum condition) "001 invalid")))
+    (let* ((datum (make-hash-table :test 'equal)))
+      ;; NOTE(notmgsk): This is unfortunate. JSON keys are required to
+      ;; be strings and so yason makes the (questionable?) decision to
+      ;; parse keys as strings. The numeric key in {0: 1} is then
+      ;; parsed as a string "0". In a more rigid interpretation it
+      ;; would instead throw an error. :shrug:
+      (setf (gethash 0 datum) "value")
+      (let ((condition (signals json-schema-invalid-type-error
+                         (validate datum schema))))
+        (is (= (json-schema-error-datum condition) 0))
+        (is (string= (json-schema-error-expected-type condition) "string"))
+        (is (string= (json-schema-error-invalid-type condition) "number"))))))
