@@ -6,7 +6,8 @@
   (:import-from #:alexandria
                 #:alist-hash-table
                 #:assoc-value
-                #:when-let*)
+                #:when-let*
+                #:if-let)
   (:import-from #:trivial-do
                 #:dohash)
   (:export #:json-schema-error

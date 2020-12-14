@@ -170,12 +170,9 @@
     (let ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\", \"direction\": \"NW\" }")))
       (not-signals json-schema-error
         (validate data schema)))
-    (let* ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\", \"office_number\": 201 }"))
-           (condition (signals json-schema-invalid-type-error
-                        (validate data schema))))
-      (is (= (json-schema-error-datum condition) 201))
-      (is (string= (json-schema-error-expected-type condition) "string"))
-      (is (string= (json-schema-error-invalid-type condition) "number")))))
+    (let* ((data (yason:parse "{ \"number\": 1600, \"street_name\": \"Pennsylvania\", \"street_type\": \"Avenue\", \"office_number\": 201 }")))
+      (matches (json-schema-error "non-string datum 201")
+        (validate data schema)))))
 
 
 
@@ -232,13 +229,10 @@
       (not-signals json-schema-error
         (validate (yason:parse data)
                   (yason:parse schema))))
-    (let* ((data "{ \"S_0\": 42 }")
-           (condition (signals json-schema-invalid-type-error
-                        (validate (yason:parse data)
-                                  (yason:parse schema)))))
-      (is (string= (json-schema-error-expected-type condition) "string"))
-      (is (string= (json-schema-error-invalid-type condition) "number"))
-      (is (= (json-schema-error-datum condition) 42)))
+    (let* ((data "{ \"S_0\": 42 }"))
+      (matches (json-schema-error "non-string datum 42")
+        (validate (yason:parse data)
+                  (yason:parse schema))))
     (let* ((data "{ \"I_42\": \"This is a string\" }")
            (condition (signals json-schema-invalid-type-error
                         (validate (yason:parse data)
@@ -270,13 +264,10 @@
       (not-signals json-schema-error
         (validate (yason:parse data)
                   (yason:parse schema))))
-    (let* ((data "{ \"keyword\": 42 }")
-           (condition (signals json-schema-invalid-type-error
-                        (validate (yason:parse data)
-                                  (yason:parse schema)))))
-      (is (string= (json-schema-error-expected-type condition) "string"))
-      (is (string= (json-schema-error-invalid-type condition) "number"))
-      (is (= (json-schema-error-datum condition) 42)))))
+    (let* ((data "{ \"keyword\": 42 }"))
+      (matches (json-schema-error "non-string datum 42")
+        (validate (yason:parse data)
+                  (yason:parse schema))))))
 
 (deftest test-property-names ()
   (let ((schema (yason:parse "{
@@ -304,11 +295,8 @@
       ;; parsed as a string "0". In a more rigid interpretation it
       ;; would instead throw an error. :shrug:
       (setf (gethash 0 datum) "value")
-      (let ((condition (signals json-schema-invalid-type-error
-                         (validate datum schema))))
-        (is (= (json-schema-error-datum condition) 0))
-        (is (string= (json-schema-error-expected-type condition) "string"))
-        (is (string= (json-schema-error-invalid-type condition) "number"))))))
+      (matches (json-schema-error "non-string datum 0")
+        (validate datum schema)))))
 
 (deftest test-invalid-object ()
   (signals json-schema-invalid-type-error

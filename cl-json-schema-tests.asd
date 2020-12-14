@@ -3,7 +3,8 @@
   :author ""
   :license ""
   :depends-on (#:cl-json-schema
-               #:fiasco)
+               #:fiasco
+               #:cl-ppcre)
   :perform (asdf:test-op
             (o s)
             (uiop:symbol-call
@@ -17,4 +18,5 @@
                (:file "test-boolean")
                (:file "test-string")
                (:file "test-numeric")
+               (:file "test-array")
                (:file "test-object")))

@@ -6,11 +6,8 @@
     (not-signals json-schema-error (validate (yason:parse "\"Déjà vu\"") schema))
     (not-signals json-schema-error (validate (yason:parse "\"42\"") schema))
     (not-signals json-schema-error (validate (yason:parse "\"\"") schema))
-    (let ((condition (signals json-schema-invalid-type-error
-                       (validate 42 schema))))
-      (is (= (json-schema-error-datum condition) 42))
-      (is (string= (json-schema-error-expected-type condition) "string"))
-      (is (string= (json-schema-error-invalid-type condition) "number")))))
+    (matches (json-schema-error "non-string datum 42")
+      (validate 42 schema))))
 
 (deftest test-string-length ()
   (let ((schema (yason:parse "{

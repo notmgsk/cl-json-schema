@@ -1,8 +1,17 @@
 (in-package #:cl-json-schema)
 
 (define-condition json-schema-error ()
-  ((schema :initarg :schema :reader json-schema-error-schema)
-   (datum :initarg :datum :reader json-schema-error-datum)))
+  ((schema :initarg :schema :reader json-schema-error-schema :initform nil)
+   (datum :initarg :datum :reader json-schema-error-datum :initform nil)
+   (message :initarg :message :reader json-schema-error-message :initform nil))
+  (:report
+   (lambda (condition stream)
+     (with-slots (schema datum message) condition
+       (format stream "~a" message)))))
+
+(defun json-schema-error (message &rest rest)
+  (let ((condition (apply #'make-condition 'json-schema-error :message message rest)))
+    (error condition)))
 
 (define-condition json-schema-invalid-type-error (json-schema-error)
   ((expected-type :initarg :expected-type :reader json-schema-error-expected-type)
